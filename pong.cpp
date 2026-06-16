@@ -2,8 +2,14 @@
 #include <iostream>
 
 const int WINDOW_WIDTH = 800;
-const int WINDOW_HEIGHT = 600;
+const int WINDOW_HEIGHT = 750;
 const int BALL_SIZE = 15;
+const int PLAYER_HEIGHT = 15;
+const int PLAYER_WIDTH = 100;
+const int ENEMY_HEIGHT = 15;
+const int ENEMY_WIDTH = 100;
+const int SPEED = 10;
+int playerX = WINDOW_WIDTH / 2 - PLAYER_WIDTH / 2;
 
 int main(int argc, char* argv[]) {
     // 1. Initialize SDL Video Subsystem
@@ -49,15 +55,40 @@ int main(int argc, char* argv[]) {
                 isRunning = false;
             }
         }
+        
+        // Grab a pointer to the entire keyboard state array
+        const Uint8* state = SDL_GetKeyboardState(NULL);
+        // 3. Check for held down keys using Scancodes
+        if (state[SDL_SCANCODE_LEFT] || state[SDL_SCANCODE_A]) {
+          playerX -= SPEED;
+          std::cout << playerX;
+          if (playerX >= WINDOW_WIDTH + PLAYER_WIDTH) {
+            playerX += 10;
+          }
+        }
+        if (state[SDL_SCANCODE_RIGHT] || state[SDL_SCANCODE_D]) {
+          playerX += SPEED;
+          std::cout << playerX;
+        }
+
+
 
         // Clear Screen (Set color to Dark Blue: R=0, G=20, B=60, A=255)
         SDL_SetRenderDrawColor(renderer, 0, 20, 60, 255);
         SDL_RenderClear(renderer);
 
         // Render your graphics here (Draw shapes, textures, etc.)
-        SDL_SetRenderDrawColor(renderer, 0, 0, 255, 255);
-        SDL_Rect filledRect = {WINDOW_WIDTH / 2 - BALL_SIZE, WINDOW_HEIGHT / 2 - BALL_SIZE, BALL_SIZE, BALL_SIZE};
-        SDL_RenderFillRect(renderer, &filledRect);
+
+        // Render ball 1st we decide its color using RGB 
+        SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
+        // Then we define its values (X Position, Y Position, Width, Height)
+        SDL_Rect BALL = {WINDOW_WIDTH / 2 - BALL_SIZE / 2, WINDOW_HEIGHT / 2 - BALL_SIZE / 2, BALL_SIZE, BALL_SIZE};
+        SDL_Rect PLAYER = {playerX, WINDOW_HEIGHT - PLAYER_HEIGHT - 15, PLAYER_WIDTH, PLAYER_HEIGHT};
+        SDL_Rect ENEMY = {WINDOW_WIDTH / 2 - ENEMY_WIDTH / 2, ENEMY_HEIGHT, ENEMY_WIDTH, ENEMY_HEIGHT};
+        // Render Rect to Screen
+        SDL_RenderFillRect(renderer, &BALL);
+        SDL_RenderFillRect(renderer, &PLAYER);
+        SDL_RenderFillRect(renderer, &ENEMY);
         // Update Screen
         SDL_RenderPresent(renderer);
     }
