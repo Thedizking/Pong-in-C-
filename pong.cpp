@@ -1,5 +1,6 @@
 #include <SDL2/SDL.h>
 #include <iostream>
+#include <algorithm>
 
 const int WINDOW_WIDTH = 800;
 const int WINDOW_HEIGHT = 750;
@@ -9,7 +10,12 @@ const int PLAYER_WIDTH = 100;
 const int ENEMY_HEIGHT = 15;
 const int ENEMY_WIDTH = 100;
 const int SPEED = 10;
+double BALL_SPEEDX = 1.0;
+double BALL_SPEEDY = 1.0;
 int playerX = WINDOW_WIDTH / 2 - PLAYER_WIDTH / 2;
+int ballX = WINDOW_WIDTH / 2 - BALL_SIZE / 2;
+int ballY = WINDOW_HEIGHT / 2 - BALL_SIZE / 2;
+
 
 int main(int argc, char* argv[]) {
     // 1. Initialize SDL Video Subsystem
@@ -55,20 +61,29 @@ int main(int argc, char* argv[]) {
                 isRunning = false;
             }
         }
+
+        ballX += BALL_SPEEDX;
+        ballY += BALL_SPEEDY;
         
+        playerX = std::clamp(playerX, 0, WINDOW_WIDTH - PLAYER_WIDTH);
         // Grab a pointer to the entire keyboard state array
         const Uint8* state = SDL_GetKeyboardState(NULL);
         // 3. Check for held down keys using Scancodes
         if (state[SDL_SCANCODE_LEFT] || state[SDL_SCANCODE_A]) {
           playerX -= SPEED;
-          std::cout << playerX;
-          if (playerX >= WINDOW_WIDTH + PLAYER_WIDTH) {
-            playerX += 10;
-          }
         }
+
         if (state[SDL_SCANCODE_RIGHT] || state[SDL_SCANCODE_D]) {
           playerX += SPEED;
-          std::cout << playerX;
+        }
+
+
+        if (ballX <= 0) {
+          ballX = 0;
+          BALL_SPEEDX = -BALL_SPEEDX;
+        } else if (ballX + BALL_SIZE >= WINDOW_WIDTH) {
+          ballX = WINDOW_WIDTH - BALL_SIZE;
+          BALL_SPEEDX =-BALL_SPEEDX;
         }
 
 
@@ -82,13 +97,19 @@ int main(int argc, char* argv[]) {
         // Render ball 1st we decide its color using RGB 
         SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
         // Then we define its values (X Position, Y Position, Width, Height)
-        SDL_Rect BALL = {WINDOW_WIDTH / 2 - BALL_SIZE / 2, WINDOW_HEIGHT / 2 - BALL_SIZE / 2, BALL_SIZE, BALL_SIZE};
+        SDL_Rect BALL = {ballX, ballY, BALL_SIZE, BALL_SIZE};
         SDL_Rect PLAYER = {playerX, WINDOW_HEIGHT - PLAYER_HEIGHT - 15, PLAYER_WIDTH, PLAYER_HEIGHT};
         SDL_Rect ENEMY = {WINDOW_WIDTH / 2 - ENEMY_WIDTH / 2, ENEMY_HEIGHT, ENEMY_WIDTH, ENEMY_HEIGHT};
         // Render Rect to Screen
         SDL_RenderFillRect(renderer, &BALL);
         SDL_RenderFillRect(renderer, &PLAYER);
         SDL_RenderFillRect(renderer, &ENEMY);
+
+        if (SDL_HasIntersection(&BALL, &PLAYER)) {
+          ballX = playerX + PLAYER_WIDTH; // Push ball to the right edge of paddle
+          BALL_SPEEDY = -BALL_SPEEDY; // Reverse horizontal direction 
+        }
+                                                               //
         // Update Screen
         SDL_RenderPresent(renderer);
     }
