@@ -10,9 +10,12 @@ const int PLAYER_WIDTH = 100;
 const int ENEMY_HEIGHT = 15;
 const int ENEMY_WIDTH = 100;
 const int SPEED = 10;
-double BALL_SPEEDX = 1.0;
-double BALL_SPEEDY = 1.0;
+double BALL_SPEEDX = 2.0;
+double BALL_SPEEDY = 2.0;
+const int playerY = WINDOW_HEIGHT - PLAYER_HEIGHT - 15;
+const int enemyY = WINDOW_HEIGHT / 50;
 int playerX = WINDOW_WIDTH / 2 - PLAYER_WIDTH / 2;
+int enemyX = WINDOW_WIDTH / 2 - PLAYER_WIDTH / 2;
 int ballX = WINDOW_WIDTH / 2 - BALL_SIZE / 2;
 int ballY = WINDOW_HEIGHT / 2 - BALL_SIZE / 2;
 
@@ -76,7 +79,12 @@ int main(int argc, char* argv[]) {
         if (state[SDL_SCANCODE_RIGHT] || state[SDL_SCANCODE_D]) {
           playerX += SPEED;
         }
-
+        
+        if (enemyX < ballX) {
+          enemyX += SPEED;
+        } else if (enemyX > ballX) {
+          enemyX += -SPEED;
+        }
 
         if (ballX <= 0) {
           ballX = 0;
@@ -98,18 +106,27 @@ int main(int argc, char* argv[]) {
         SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
         // Then we define its values (X Position, Y Position, Width, Height)
         SDL_Rect BALL = {ballX, ballY, BALL_SIZE, BALL_SIZE};
-        SDL_Rect PLAYER = {playerX, WINDOW_HEIGHT - PLAYER_HEIGHT - 15, PLAYER_WIDTH, PLAYER_HEIGHT};
-        SDL_Rect ENEMY = {WINDOW_WIDTH / 2 - ENEMY_WIDTH / 2, ENEMY_HEIGHT, ENEMY_WIDTH, ENEMY_HEIGHT};
+        SDL_Rect PLAYER = {playerX, playerY, PLAYER_WIDTH, PLAYER_HEIGHT};
+        SDL_Rect ENEMY = {enemyX, enemyY, ENEMY_WIDTH, ENEMY_HEIGHT};
         // Render Rect to Screen
         SDL_RenderFillRect(renderer, &BALL);
         SDL_RenderFillRect(renderer, &PLAYER);
         SDL_RenderFillRect(renderer, &ENEMY);
 
         if (SDL_HasIntersection(&BALL, &PLAYER)) {
-          ballX = playerX + PLAYER_WIDTH; // Push ball to the right edge of paddle
-          BALL_SPEEDY = -BALL_SPEEDY; // Reverse horizontal direction 
+          ballY = playerY - PLAYER_HEIGHT; // Push ball to the top of paddle
+          BALL_SPEEDY = -BALL_SPEEDY; // Reverse Vertical Direction                           
+          BALL_SPEEDY += 0.1;
+          BALL_SPEEDX += 0.1;
         }
-                                                               //
+
+        if (SDL_HasIntersection(&BALL, &ENEMY)) {
+          ballY = enemyY + ENEMY_HEIGHT; // Push ball to the top of paddle
+          BALL_SPEEDY = -BALL_SPEEDY; // Reverse Vertical Direction                           
+          BALL_SPEEDY += 0.1;
+          BALL_SPEEDX += 0.1;
+        }
+
         // Update Screen
         SDL_RenderPresent(renderer);
     }
