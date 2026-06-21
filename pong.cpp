@@ -95,7 +95,6 @@ int main(int argc, char* argv[]) {
         }
 
 
-
         // Clear Screen (Set color to Dark Blue: R=0, G=20, B=60, A=255)
         SDL_SetRenderDrawColor(renderer, 0, 20, 60, 255);
         SDL_RenderClear(renderer);
@@ -116,12 +115,12 @@ int main(int argc, char* argv[]) {
         if (SDL_HasIntersection(&BALL, &PLAYER)) {
           ballY = playerY - PLAYER_HEIGHT; // Push ball to the top of paddle
           BALL_SPEEDY = -BALL_SPEEDY; // Reverse Vertical Direction                           
-          BALL_SPEEDY += 0.1;
-          BALL_SPEEDX += 0.1;
 
-          if (ballX > 0 && ballX < playerX / 2) {
+          if (ballX > 0 && ballX <= playerX + PLAYER_WIDTH / 2) {
             BALL_SPEEDX *= -BALL_SPEEDX;
-          }
+          } else if (ballX < 0 && ballX >= playerX + PLAYER_WIDTH / 2) {
+            BALL_SPEEDX *= -BALL_SPEEDX;
+          } 
         }
 
         if (SDL_HasIntersection(&BALL, &ENEMY)) {
