@@ -44,7 +44,7 @@ int main(int argc, char* argv[]) {
     }
 
     // 3. Create Hardware-Accelerated Renderer
-    SDL_Renderer* renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
+    SDL_Renderer* renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
     if (!renderer) {
         std::cerr << "Renderer could not be created! SDL_Error: " << SDL_GetError() << std::endl;
         SDL_DestroyWindow(window);
@@ -118,6 +118,10 @@ int main(int argc, char* argv[]) {
           BALL_SPEEDY = -BALL_SPEEDY; // Reverse Vertical Direction                           
           BALL_SPEEDY += 0.1;
           BALL_SPEEDX += 0.1;
+
+          if (ballX > 0 && ballX < playerX / 2) {
+            BALL_SPEEDX *= -BALL_SPEEDX;
+          }
         }
 
         if (SDL_HasIntersection(&BALL, &ENEMY)) {
