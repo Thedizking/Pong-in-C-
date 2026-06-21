@@ -1,5 +1,6 @@
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_ttf.h>
+#include <SDL2/SDL_mixer.h>
 #include <iostream>
 #include <algorithm>
 
@@ -24,12 +25,13 @@ int enemyScore = 0;
 float playerCenterX = playerX + (PLAYER_WIDTH / 2.0f);
 float enemyCenterX = enemyX + (ENEMY_WIDTH / 2.0f);
 float ballCenterX = ballX + (BALL_SIZE / 2.0f);
-float maxBounceAngle = 5 * M_PI / 12.0f; // 85 degrees in radians
+float maxBounceAngle = 5 * M_PI / 12.0f; // 75 degrees in radians
 
 int main(int argc, char* argv[]) {
     // 1. Initialize SDL Video Subsystem
     if (SDL_Init(SDL_INIT_VIDEO) < 0) {
         std::cerr << "SDL could not initialize! SDL_Error: " << SDL_GetError() << std::endl;
+        SDL_Quit();
         return 1;
     }
 
@@ -39,6 +41,19 @@ int main(int argc, char* argv[]) {
       return 1;
     }
 
+    if (Mix_OpenAudio(44100, MIX_DEFAULT_FORMAT, 2, 2048) < 0) {
+      std::cout << "SDL_Mixer Error" << Mix_GetError() << std::endl;
+      Mix_CloseAudio();
+      return 1;
+    }
+
+    Mix_Chunk* hitSound = Mix_LoadWAV("Sounds/Hit.wav");
+    Mix_Chunk* scoreSound = Mix_LoadWAV("Sounds/Score.wav");
+
+        if (!hitSound || !scoreSound) {
+        std::cout << "Failed to load sound! Error: " << Mix_GetError() << std::endl;
+        Mix_CloseAudio();
+    }
 
     // 2. Create Window
     SDL_Window* window = SDL_CreateWindow(
@@ -52,6 +67,7 @@ int main(int argc, char* argv[]) {
 
     if (!window) {
         std::cerr << "Window could not be created! SDL_Error: " << SDL_GetError() << std::endl;
+        Mix_CloseAudio();
         SDL_Quit();
         return 1;
     }
@@ -60,6 +76,7 @@ int main(int argc, char* argv[]) {
     SDL_Renderer* renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
     if (!renderer) {
         std::cerr << "Renderer could not be created! SDL_Error: " << SDL_GetError() << std::endl;
+        Mix_CloseAudio();
         SDL_DestroyWindow(window);
         SDL_Quit();
         return 1;
@@ -70,6 +87,7 @@ int main(int argc, char* argv[]) {
     if (!font) {
         std::cout << "Font Load Error: " << TTF_GetError() << std::endl;
         // Cleanup if font missing
+        Mix_CloseAudio();
         SDL_DestroyRenderer(renderer);
         SDL_DestroyWindow(window);
         TTF_Quit();
@@ -140,9 +158,15 @@ int main(int argc, char* argv[]) {
         if (ballX <= 0) {
           ballX = 0;
           BALL_SPEEDX = -BALL_SPEEDX;
+          // Channel -1 means play on the first available open audio channel
+          // Loops 0 means play the sound exactly 1 time
+          Mix_PlayChannel(-1, hitSound, 0);
         } else if (ballX + BALL_SIZE >= WINDOW_WIDTH) {
           ballX = WINDOW_WIDTH - BALL_SIZE;
           BALL_SPEEDX =-BALL_SPEEDX;
+          // Channel -1 means play on the first available open audio channel
+          // Loops 0 means play the sound exactly 1 time
+          Mix_PlayChannel(-1, hitSound, 0);
         }
 
         if (ballY <= 0) {
@@ -151,6 +175,7 @@ int main(int argc, char* argv[]) {
           playerScore += 1;
           BALL_SPEEDX = 2.0;
           BALL_SPEEDY = 2.0;
+          Mix_PlayChannel(-1, scoreSound, 0);
 
           if (pScoreTexture != nullptr) {
             SDL_DestroyTexture(pScoreTexture);
@@ -171,6 +196,7 @@ int main(int argc, char* argv[]) {
           enemyScore += 1;
           BALL_SPEEDX = 2.0;
           BALL_SPEEDY = 2.0;
+          Mix_PlayChannel(-1, scoreSound, 0);
 
           if (eScoreTexture != nullptr) {
             SDL_DestroyTexture(eScoreTexture);
@@ -210,6 +236,9 @@ int main(int argc, char* argv[]) {
           float relativeIntersectX = (ballCenterX - playerCenterX) / (PLAYER_WIDTH / 2.0f);
           float bounceAngle = relativeIntersectX * maxBounceAngle;
           BALL_SPEEDY = -BALL_SPEEDY * cos(bounceAngle); // Reverse Vertical Direction                           
+                                                         // Channel -1 means play on the first available open audio channel
+                                                         // Loops 0 means play the sound exactly 1 time
+          Mix_PlayChannel(-1, hitSound, 0);
           }
 
         if (SDL_HasIntersection(&BALL, &ENEMY)) {
@@ -217,6 +246,9 @@ int main(int argc, char* argv[]) {
           float relativeIntersectX = (ballCenterX - enemyCenterX) / (ENEMY_WIDTH / 2.0f);
           float bounceAngle = relativeIntersectX * maxBounceAngle;
           BALL_SPEEDY = -BALL_SPEEDY * cos(bounceAngle); // Reverse Vertical Direction                           
+                                                         // Channel -1 means play on the first available open audio channel
+                                                         // Loops 0 means play the sound exactly 1 time
+          Mix_PlayChannel(-1, hitSound, 0);
         }
 
         SDL_RenderCopy(renderer, pScoreTexture, NULL, &pScoreRect);
