@@ -21,6 +21,10 @@ int ballX = WINDOW_WIDTH / 2 - BALL_SIZE / 2;
 int ballY = WINDOW_HEIGHT / 2 - BALL_SIZE / 2;
 int playerScore = 0;
 int enemyScore = 0;
+float playerCenterX = playerX + (PLAYER_WIDTH / 2.0f);
+float enemyCenterX = enemyX + (ENEMY_WIDTH / 2.0f);
+float ballCenterX = ballX + (BALL_SIZE / 2.0f);
+float maxBounceAngle = 5 * M_PI / 12.0f; // 85 degrees in radians
 
 int main(int argc, char* argv[]) {
     // 1. Initialize SDL Video Subsystem
@@ -145,6 +149,8 @@ int main(int argc, char* argv[]) {
           ballX = WINDOW_WIDTH / 2;
           ballY = WINDOW_HEIGHT / 2;
           playerScore += 1;
+          BALL_SPEEDX = 2.0;
+          BALL_SPEEDY = 2.0;
 
           if (pScoreTexture != nullptr) {
             SDL_DestroyTexture(pScoreTexture);
@@ -163,6 +169,8 @@ int main(int argc, char* argv[]) {
           ballX = WINDOW_WIDTH / 2;
           ballY = WINDOW_HEIGHT / 2;
           enemyScore += 1;
+          BALL_SPEEDX = 2.0;
+          BALL_SPEEDY = 2.0;
 
           if (eScoreTexture != nullptr) {
             SDL_DestroyTexture(eScoreTexture);
@@ -197,20 +205,18 @@ int main(int argc, char* argv[]) {
 
         if (SDL_HasIntersection(&BALL, &PLAYER)) {
           ballY = playerY - PLAYER_HEIGHT; // Push ball to the top of paddle
-          BALL_SPEEDY = -BALL_SPEEDY; // Reverse Vertical Direction                           
-          BALL_SPEEDY += 0.1;
-          BALL_SPEEDX += 0.1;
-
-          if (ballX > 0 && ballX < playerX / 2) {
-            BALL_SPEEDX *= -BALL_SPEEDX;
+          BALL_SPEEDY += 0.3;
+          BALL_SPEEDX += 0.3;
+          float relativeIntersectX = (ballCenterX - playerCenterX) / (PLAYER_WIDTH / 2.0f);
+          float bounceAngle = relativeIntersectX * maxBounceAngle;
+          BALL_SPEEDY = -BALL_SPEEDY * cos(bounceAngle); // Reverse Vertical Direction                           
           }
-        }
 
         if (SDL_HasIntersection(&BALL, &ENEMY)) {
           ballY = enemyY + ENEMY_HEIGHT; // Push ball to the top of paddle
-          BALL_SPEEDY = -BALL_SPEEDY; // Reverse Vertical Direction                           
-          BALL_SPEEDY += 0.1;
-          BALL_SPEEDX += 0.1;
+          float relativeIntersectX = (ballCenterX - enemyCenterX) / (ENEMY_WIDTH / 2.0f);
+          float bounceAngle = relativeIntersectX * maxBounceAngle;
+          BALL_SPEEDY = -BALL_SPEEDY * cos(bounceAngle); // Reverse Vertical Direction                           
         }
 
         SDL_RenderCopy(renderer, pScoreTexture, NULL, &pScoreRect);
