@@ -1,4 +1,5 @@
 #include <SDL2/SDL.h>
+#include <SDL2/SDL_ttf.h>
 #include <iostream>
 #include <algorithm>
 
@@ -28,6 +29,13 @@ int main(int argc, char* argv[]) {
         return 1;
     }
 
+    if (TTF_Init() == -1) {
+      std::cout << "TTF Init Error: " << TTF_GetError() << std::endl;
+      SDL_Quit();
+      return 1;
+    }
+
+
     // 2. Create Window
     SDL_Window* window = SDL_CreateWindow(
         "SDL2 Pong",          // Window title
@@ -53,6 +61,43 @@ int main(int argc, char* argv[]) {
         return 1;
     }
 
+    TTF_Font* font = TTF_OpenFont("fonts/PressStart2P-Regular.ttf", 24);
+
+    if (!font) {
+        std::cout << "Font Load Error: " << TTF_GetError() << std::endl;
+        // Cleanup if font missing
+        SDL_DestroyRenderer(renderer);
+        SDL_DestroyWindow(window);
+        TTF_Quit();
+        SDL_Quit();
+        return 1;
+    }
+
+    SDL_Color textColor = {255, 255, 255};
+    SDL_Surface* pScoreSurface = TTF_RenderText_Blended(font, std::to_string(playerScore).c_str(), textColor);
+    SDL_Texture* pScoreTexture = SDL_CreateTextureFromSurface(renderer, pScoreSurface);
+
+    SDL_Surface* eScoreSurface = TTF_RenderText_Blended(font, std::to_string(enemyScore).c_str(), textColor);
+    SDL_Texture* eScoreTexture = SDL_CreateTextureFromSurface(renderer, eScoreSurface);
+
+        // Define placement and scale matching text dimensions
+    SDL_Rect pScoreRect;
+    pScoreRect.x = 100; // X coordinate
+    pScoreRect.y = 100; // Y coordinate
+    pScoreRect.w = pScoreSurface->w; // Use text surface width
+    pScoreRect.h = pScoreSurface->h; // Use text surface height
+
+    SDL_FreeSurface(pScoreSurface);
+
+
+    SDL_Rect eScoreRect;
+    eScoreRect.x = 675; // X coordinate
+    eScoreRect.y = 100; // Y coordinate
+    eScoreRect.w = eScoreSurface->w; // Use text surface width
+    eScoreRect.h = eScoreSurface->h; // Use text surface height
+
+    SDL_FreeSurface(eScoreSurface);
+
     // 4. Main Loop Flag and Event Handler
     bool isRunning = true;
     SDL_Event event;
@@ -70,6 +115,7 @@ int main(int argc, char* argv[]) {
         ballY += BALL_SPEEDY;
         
         playerX = std::clamp(playerX, 0, WINDOW_WIDTH - PLAYER_WIDTH);
+        enemyX = std::clamp(enemyX, 0, WINDOW_WIDTH - PLAYER_WIDTH);
         // Grab a pointer to the entire keyboard state array
         const Uint8* state = SDL_GetKeyboardState(NULL);
         // 3. Check for held down keys using Scancodes
@@ -99,13 +145,39 @@ int main(int argc, char* argv[]) {
           ballX = WINDOW_WIDTH / 2;
           ballY = WINDOW_HEIGHT / 2;
           playerScore += 1;
+
+          if (pScoreTexture != nullptr) {
+            SDL_DestroyTexture(pScoreTexture);
+          }
+
+          SDL_Surface* pScoreSurface = TTF_RenderText_Blended(font, std::to_string(playerScore).c_str(), textColor);
+
+          pScoreTexture = SDL_CreateTextureFromSurface(renderer, pScoreSurface);
+
+          pScoreRect.w = pScoreSurface->w;
+          pScoreRect.h = pScoreSurface->h;
+
+          SDL_FreeSurface(pScoreSurface);
+
         } else if (ballY >= WINDOW_HEIGHT) {
           ballX = WINDOW_WIDTH / 2;
           ballY = WINDOW_HEIGHT / 2;
           enemyScore += 1;
-          std::cout << enemyScore << "\n" << playerScore;
-        }
 
+          if (eScoreTexture != nullptr) {
+            SDL_DestroyTexture(eScoreTexture);
+          }
+
+          SDL_Surface* eScoreSurface = TTF_RenderText_Blended(font, std::to_string(enemyScore).c_str(), textColor);
+
+          eScoreTexture = SDL_CreateTextureFromSurface(renderer, eScoreSurface);
+
+          pScoreRect.w = pScoreSurface->w;
+          pScoreRect.h = pScoreSurface->h;
+
+          SDL_FreeSurface(eScoreSurface);
+
+        }
         // Clear Screen (Set color to Dark Blue: R=0, G=20, B=60, A=255)
         SDL_SetRenderDrawColor(renderer, 0, 20, 60, 255);
         SDL_RenderClear(renderer);
@@ -141,6 +213,8 @@ int main(int argc, char* argv[]) {
           BALL_SPEEDX += 0.1;
         }
 
+        SDL_RenderCopy(renderer, pScoreTexture, NULL, &pScoreRect);
+        SDL_RenderCopy(renderer, eScoreTexture, NULL, &eScoreRect);
         // Update Screen
         SDL_RenderPresent(renderer);
     }
