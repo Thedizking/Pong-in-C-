@@ -18,7 +18,8 @@ int playerX = WINDOW_WIDTH / 2 - PLAYER_WIDTH / 2;
 int enemyX = WINDOW_WIDTH / 2 - PLAYER_WIDTH / 2;
 int ballX = WINDOW_WIDTH / 2 - BALL_SIZE / 2;
 int ballY = WINDOW_HEIGHT / 2 - BALL_SIZE / 2;
-
+int playerScore = 0;
+int enemyScore = 0;
 
 int main(int argc, char* argv[]) {
     // 1. Initialize SDL Video Subsystem
@@ -94,7 +95,16 @@ int main(int argc, char* argv[]) {
           BALL_SPEEDX =-BALL_SPEEDX;
         }
 
-
+        if (ballY <= 0) {
+          ballX = WINDOW_WIDTH / 2;
+          ballY = WINDOW_HEIGHT / 2;
+          playerScore += 1;
+        } else if (ballY >= WINDOW_HEIGHT) {
+          ballX = WINDOW_WIDTH / 2;
+          ballY = WINDOW_HEIGHT / 2;
+          enemyScore += 1;
+          std::cout << enemyScore << "\n" << playerScore;
+        }
 
         // Clear Screen (Set color to Dark Blue: R=0, G=20, B=60, A=255)
         SDL_SetRenderDrawColor(renderer, 0, 20, 60, 255);
